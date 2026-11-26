@@ -1,5 +1,5 @@
-import {categories, element, imageSource, money, normalize, standardTags} from './catalog.js';
-import {configured, demo, deleteProduct, listProducts, login, logout, saveProduct, uploadPhoto} from './repository.js';
+import {categories, element, imageSource, money, normalize, standardTags} from './catalog.js?v=apresentacao-2';
+import {configured, demo, deleteProduct, listProducts, login, logout, saveProduct, uploadPhoto} from './repository.js?v=apresentacao-2';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#product-form');

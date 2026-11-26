@@ -1,5 +1,5 @@
-import {categories, element, imageSource, money, normalize} from './catalog.js';
-import {demo, listProducts} from './repository.js';
+import {categories, element, imageSource, money, normalize} from './catalog.js?v=apresentacao-2';
+import {demo, listProducts} from './repository.js?v=apresentacao-2';
 
 const grids = {
   marmitas: '#marmita-grid', sexta: '#sexta-grid', porcoes: '#porcoes-list',

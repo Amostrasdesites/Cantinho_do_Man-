@@ -1,4 +1,4 @@
-import {isPreviewHost} from './catalog.js';
+import {isPreviewHost} from './catalog.js?v=apresentacao-2';
 import {config} from './config.js';
 import {originalCatalog} from './catalog-data.js';
 
