@@ -45,7 +45,7 @@ create policy catalog_admin_manages_products on public.products
 create function public.catalog_public()
 returns table (
   id uuid, category text, name text, description text, price_cents integer,
-  image text, tags varchar(35)[], starting boolean, position integer
+  image text, tags varchar(35)[], starting boolean, "position" integer
 )
 language sql stable security definer set search_path = ''
 as $$
