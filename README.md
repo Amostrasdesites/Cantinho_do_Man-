@@ -1,39 +1,26 @@
 # Cantinho do Maná
 
-Vitrine e painel administrativo responsivos. O link **Área administrativa** fica no rodapé da vitrine.
+Vitrine pública e painel exclusivo deste cardápio. Acesso pelo link **Área administrativa**, no rodapé. O painel oferece produtos, fotos, métricas, aparência e troca de senha.
 
-## Experimentar
+## Ativar o painel
 
-Na pasta que contém `index.html`, execute `python -m http.server 8080 --bind 127.0.0.1`. Abra `http://127.0.0.1:8080/admin/`. A vitrine fica em `http://127.0.0.1:8080/`.
-
-Na demonstração em localhost e no endereço de apresentação do GitHub Pages, o painel pede o usuário Mana e a senha de apresentação combinada. O acesso é validado no navegador e serve para demonstrar o fluxo. A validação real e a proteção dos dados começam quando o Supabase é configurado. Em outros endereços o painel fica fechado até o banco ser configurado. Os dados da apresentação ficam no navegador. Os preços originais vêm preenchidos e os custos começam vazios. Use apenas dados de teste. As alterações locais não são migradas automaticamente.
-
-## Ativar o catálogo compartilhado
-
-1. Crie um projeto Supabase. No **SQL Editor**, execute `database/01-estrutura.sql` e depois `database/02-catalogo-inicial.sql` e `database/03-fotos.sql`.
-2. Em **Authentication → Users**, crie a conta da proprietária com e-mail e senha, confirme a conta e copie seu UUID. Desative novos cadastros caso o projeto seja dedicado ao catálogo.
-3. Execute a consulta abaixo no SQL Editor com o UUID da proprietária no lugar do exemplo.
+1. No projeto Supabase dedicado ao Cantinho do Maná, execute os arquivos SQL numerados de `database/` em ordem, começando pelos ainda pendentes.
+2. Desative novos cadastros em Authentication. Crie duas contas com e-mails distintos e senhas escolhidas pelos titulares. Adicione os UUIDs das duas contas à lista de acesso no SQL Editor.
 
    ```sql
    insert into public.catalog_admins (user_id)
-   values ('00000000-0000-0000-0000-000000000000');
+   values ('<uuid-1>'), ('<uuid-2>');
    ```
 
-4. Em `assets/js/config.js`, preencha `supabaseUrl` com a URL HTTPS do projeto e `publishableKey` com a chave pública que começa por `sb_publishable_`. Guarde senhas e chaves secretas fora do repositório.
-5. Suba o conteúdo desta pasta na raiz do repositório. Em **Settings → Pages**, selecione **Deploy from a branch**, `main`, `/ (root)`, e salve.
-6. Abra `admin/` no endereço publicado, entre com a conta da proprietária e edite um produto. Confira a alteração na vitrine em uma janela anônima.
+3. Preencha `assets/js/config.js` com a URL HTTPS do projeto e a chave **pública** Supabase. Guarde as senhas e as chaves secretas no serviço.
+4. Publique a raiz do repositório no GitHub Pages. A vitrine carrega os produtos ativos do mesmo banco em que o painel faz alterações. Os preços de custo e as métricas são protegidos pelos controles de acesso do banco.
+5. Em uma janela anônima, abra a vitrine e o painel. Confirme que só os e-mails autorizados conseguem abrir as ferramentas e que as alterações aparecem na vitrine.
 
-O preço de custo fica na tabela protegida pela política de acesso do Postgres. A vitrine consulta uma função que retorna apenas os campos públicos de produtos ativos. Para preservar uma ficha fora da vitrine, desmarque **Mostrar na vitrine**. Use **Excluir produto** para remoção definitiva.
+Sem conexão ao banco, a vitrine usa o catálogo inicial e o painel fica fechado. O navegador registra visitas e seções abertas só após autorização do visitante. Cada navegador conta como um visitante estimado por período. O endereço autorizado para a coleta está em `database/04-painel.sql`.
 
 ## Manutenção
 
-- `index.html` e `admin/index.html` definem a estrutura das páginas.
-- `assets/css/` guarda os estilos separados da vitrine e do painel.
-- `assets/js/catalog.js` define categorias, etiquetas e formatação.
-- `assets/js/catalog-data.js` guarda o catálogo inicial da demonstração.
-- `assets/js/repository.js` conecta o armazenamento local e o banco.
-- `assets/js/storefront.js` e `assets/js/admin.js` controlam as interfaces.
-- `assets/img/` guarda as imagens do catálogo. Na ficha do produto, selecione uma foto JPG, PNG ou WebP de até 3 MB. As fotos enviadas ficam no Supabase Storage e podem ser exibidas na vitrine.
-- `database/` contém a estrutura SQL e a carga dos 27 produtos iniciais.
-
-Referências oficiais: [Supabase Auth](https://supabase.com/docs/guides/auth), [políticas de acesso](https://supabase.com/docs/guides/database/postgres/row-level-security) e [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
+- `assets/js/repository.js` centraliza a comunicação com o Supabase.
+- `assets/js/admin.js` controla o catálogo no painel.
+- `assets/js/panel-tools.js` controla visitas, tema e senha.
+- `assets/js/storefront.js` renderiza a vitrine, aplica o tema e registra visitas autorizadas.

@@ -1,15 +1,8 @@
-import {isPreviewHost} from './catalog.js?v=apresentacao-2';
 import {config} from './config.js';
 import {originalCatalog} from './catalog-data.js';
 
 export const configured = Boolean(config.supabaseUrl && config.publishableKey);
-export const demo = !configured && isPreviewHost();
-const catalogKey = 'cantinho-preview-v2';
 let session = null;
-
-function localCatalog() {
-  return JSON.parse(localStorage.getItem(catalogKey) ?? 'null') ?? structuredClone(originalCatalog);
-}
 
 async function request(path, method = 'GET', body, token, prefer = '') {
   const headers = {apikey: config.publishableKey, 'Content-Type': 'application/json'};
@@ -22,7 +15,7 @@ async function request(path, method = 'GET', body, token, prefer = '') {
   if (response.status === 204) return;
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
-    if (response.status === 401 && token) session = null;
+    if (response.status === 401 && token && token === session?.access_token) endSession();
     throw new Error(result.message ?? result.msg ?? result.error_description ?? 'Falha ao acessar o catálogo.');
   }
   return result;
@@ -57,11 +50,6 @@ export async function logout() {
 }
 
 export async function listProducts(privateFields = false) {
-  if (demo) {
-    const products = localCatalog();
-    if (privateFields) return products;
-    return products.filter(product => product.active).map(({cost_cents, ...product}) => product);
-  }
   if (!configured) {
     if (privateFields) throw new Error('Acesso administrativo indisponível.');
     return structuredClone(originalCatalog);
@@ -81,16 +69,6 @@ export async function uploadPhoto(file) {
   if (!extension || file.size < 1 || file.size > 3 * 1024 * 1024) {
     throw new Error('Selecione uma foto JPG, PNG ou WebP de até 3 MB.');
   }
-  if (demo) {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 640 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    return canvas.toDataURL('image/webp', 0.8);
-  }
   const key = crypto.randomUUID() + '.' + extension;
   const payload = new FormData();
   payload.append('cacheControl', '3600');
@@ -100,25 +78,49 @@ export async function uploadPhoto(file) {
 }
 
 export async function saveProduct(product, editing) {
-  if (demo) {
-    const products = localCatalog();
-    const index = products.findIndex(item => item.id === product.id);
-    if (editing && index < 0) throw new Error('Produto já excluído.');
-    if (editing) products[index] = product;
-    else products.push(product);
-    localStorage.setItem(catalogKey, JSON.stringify(products));
-    return;
-  }
   const result = await adminRequest('/rest/v1/products' + (editing ? '?id=eq.' + encodeURIComponent(product.id) : ''),
     editing ? 'PATCH' : 'POST', product, 'return=representation');
   if (result.length !== 1) throw new Error('Produto indisponível para edição.');
 }
 
 export async function deleteProduct(id) {
-  if (demo) {
-    localStorage.setItem(catalogKey, JSON.stringify(localCatalog().filter(product => product.id !== id)));
-    return;
-  }
   const result = await adminRequest('/rest/v1/products?id=eq.' + encodeURIComponent(id), 'DELETE', undefined, 'return=representation');
   if (result.length !== 1) throw new Error('Produto já excluído ou indisponível.');
+}
+
+export async function loadTheme() {
+  if (!configured) return null;
+  const [theme] = await request('/rest/v1/store_theme?select=primary_color,secondary_color,font&id=eq.true');
+  return theme;
+}
+
+export async function saveTheme(theme) {
+  const rows = await adminRequest('/rest/v1/store_theme?id=eq.true','PATCH',theme,'return=representation');
+  if (rows.length !== 1) throw new Error('Aparência indisponível.');
+}
+
+export function loadAnalytics(days) {
+  return adminRequest('/rest/v1/rpc/store_analytics','POST',{p_days:days});
+}
+
+export function recordView(visitor,path) {
+  return request('/rest/v1/rpc/store_record_view','POST',{p_visitor:visitor,p_path:path});
+}
+
+function endSession(message) {
+  session = null;
+  window.dispatchEvent(new CustomEvent('catalog-session-ended',{detail:message}));
+}
+
+export async function changePassword(current,password) {
+  if (!session) throw new Error('Entre novamente para continuar.');
+  const fresh = await request('/auth/v1/token?grant_type=password','POST',{email:session.user.email,password:current});
+  try {
+    await request('/auth/v1/user','PUT',{password},fresh.access_token);
+  } catch (error) {
+    await request('/auth/v1/logout?scope=local','POST',{},fresh.access_token).catch(()=>{});
+    throw error;
+  }
+  await request('/auth/v1/logout','POST',{},fresh.access_token).catch(()=>{});
+  endSession('Senha alterada. Entre com a nova senha.');
 }

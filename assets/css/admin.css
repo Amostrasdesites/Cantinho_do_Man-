@@ -71,3 +71,10 @@ fieldset .labels { margin: 0 0 12px; }
 .photo-field > div { min-width: 0; flex: 1; }
 .photo-field p { color: var(--muted); font-size: .875rem; overflow-wrap: anywhere; }
 #remove-photo { display: flex; align-items: center; gap: 6px; margin-top: .4rem; }
+
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:1rem;margin-block:1.5rem}
+.tool-grid [role=status]{min-height:1em}
+.tool-form{display:grid;align-content:start;gap:.75rem}
+.tool-form button{justify-self:start}
+.visit-chart{height:110px;display:flex;align-items:end;gap:.25rem;padding:0;list-style:none;border-bottom:1px solid var(--line)}
+.visit-chart li{flex:1;background:var(--green);border-radius:4px 4px 0 0}
