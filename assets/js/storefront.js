@@ -1,5 +1,5 @@
 import {categories, element, imageSource, money, normalize} from './catalog.js?v=painel-1';
-import {configured, listProducts, loadTheme, recordView} from './repository.js?v=painel-1';
+import {configured, listProducts, loadTheme, recordView, recordProductView} from './repository.js?v=painel-2';
 
 const grids = {
   marmitas: '#marmita-grid', sexta: '#sexta-grid', porcoes: '#porcoes-list',
@@ -39,6 +39,7 @@ function renderProduct(product) {
   const price = element('span', (product.starting ? 'A partir de ' : '') + money(product.price_cents), 'price');
   if (product.category === 'porcoes' && !product.description && !product.image && !product.tags.includes('Mais vendido')) {
     const row = element('article', null, 'row');
+    row.dataset.product = product.id;
     row.append(element('strong', name), price, action);
     return row;
   }
@@ -58,6 +59,7 @@ function renderProduct(product) {
   const buy = element('div', null, 'buy');
   buy.append(price, action);
   body.append(buy);
+  card.dataset.product = product.id;
   card.append(body);
   return card;
 }
@@ -66,6 +68,7 @@ async function render() {
   try {
     catalog = await listProducts();
     draw();
+    document.dispatchEvent(new Event('storefront-rendered'));
     status.textContent = '';
   } catch {
     status.textContent = 'Cardápio temporariamente indisponível. Consulte as opções pelo WhatsApp.';
@@ -87,6 +90,22 @@ if (configured) {
   const sections = new Set(['doces','marmitas','sexta','porcoes','sobremesas','kits','lanches','pedidos']);
   let visitor;
   let lastPath;
+  const seen = new Set();
+  const observer = new IntersectionObserver(entries=>{
+    if (!visitor) return;
+    for (const entry of entries) {
+      const id = entry.target.dataset.product;
+      if (!entry.isIntersecting || seen.has(id)) continue;
+      seen.add(id);
+      observer.unobserve(entry.target);
+      recordProductView(visitor,id).catch(()=>seen.delete(id));
+    }
+  },{threshold:0.35});
+  function observeProducts() {
+    observer.disconnect();
+    if (visitor) document.querySelectorAll('[data-product]').forEach(card=>{ if (!seen.has(card.dataset.product)) observer.observe(card); });
+  }
+  document.addEventListener('storefront-rendered',observeProducts);
 
   function register(path) {
     if (!visitor || path === lastPath) return;
@@ -100,6 +119,7 @@ if (configured) {
     consent.hidden = true;
     register('/');
     trackSection();
+    observeProducts();
   }
   function trackSection() {
     const section = location.hash.slice(1);
@@ -118,6 +138,8 @@ if (configured) {
   document.getElementById('analytics-settings').hidden = false;
   document.getElementById('analytics-settings').onclick = ()=>{
     visitor = undefined;
+    observer.disconnect();
+    seen.clear();
     lastPath = undefined;
     try { localStorage.removeItem(visitorKey); localStorage.removeItem(consentKey); } catch {}
     consent.hidden = false;
