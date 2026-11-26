@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>Gerenciar cardápio · Cantinho do Maná</title>
-  <link rel="stylesheet" href="../assets/css/site.css?v=apresentacao-2">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=apresentacao-2">
+  <link rel="stylesheet" href="../assets/css/site.css?v=painel-1">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=painel-1">
 </head>
 <body>
   <header class="top">
@@ -17,14 +17,13 @@
   </header>
   <main class="wrap admin">
     <div class="admin-heading"><div><h1>Produtos</h1><p>Gerencie o cardápio que seus clientes veem.</p></div><button type="button" class="btn" id="new" hidden>+ Novo produto</button></div>
-    <p id="demo" class="notice" hidden><strong>Modo demonstração.</strong> As alterações ficam neste navegador. Use apenas dados de teste.</p>
-    <p id="configuration-needed" class="notice" hidden>O acesso da proprietária será liberado após a conexão com o banco do cardápio.</p>
+    <p id="configuration-needed" class="notice" hidden>O login será liberado assim que o banco do Cantinho do Maná for conectado.</p>
     <p id="status" role="status" aria-live="polite"></p>
     <form id="login" class="panel login" hidden>
-      <h2>Acesso da proprietária</h2>
-      <label>Usuário <input name="email" type="text" autocomplete="username" required></label>
+      <h2>Acesso ao painel</h2>
+      <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
       <label>Senha <input name="password" type="password" autocomplete="current-password" required></label>
-      <button class="btn green">Entrar</button><p id="login-demo-note" hidden>Acesso de demonstração para apresentação.</p>
+      <button class="btn green">Entrar</button>
     </form>
     <div id="catalog" hidden>
       <div class="summary" id="summary"></div>
@@ -40,6 +39,32 @@
           <table><thead><tr><th scope="col">Produto</th><th scope="col">Venda</th><th scope="col">Custo</th><th scope="col">Visibilidade</th><th scope="col">Ficha</th></tr></thead><tbody id="rows"></tbody></table>
         </div>
       </div>
+    </div>
+    <div id="tools" class="tool-grid" hidden>
+      <section class="panel">
+        <h2>Visitas</h2>
+        <label>Período <select id="period"><option value="7">Últimos 7 dias</option><option value="14">Últimos 14 dias</option><option value="30">Últimos 30 dias</option></select></label>
+        <p id="analytics-status" role="status"></p>
+        <div id="analytics-results" hidden>
+          <div class="summary" id="metrics"></div>
+          <h3>Visualizações por dia</h3><ul id="chart" class="visit-chart"></ul>
+          <h3>Seções mais vistas</h3><ol id="paths"></ol>
+        </div>
+      </section>
+      <form class="panel tool-form" id="theme">
+        <h2>Aparência da vitrine</h2>
+        <label>Cor principal <input name="primary_color" type="color" value="#942c20"></label>
+        <label>Cor secundária <input name="secondary_color" type="color" value="#2d482f"></label>
+        <label>Fonte <select name="font"><option>system-ui</option><option>Arial</option><option>Georgia</option><option>Verdana</option></select></label>
+        <button class="btn green">Salvar aparência</button><p id="theme-status" role="status"></p>
+      </form>
+      <form class="panel tool-form" id="password">
+        <h2>Minha senha</h2>
+        <label>Senha atual <input name="current" type="password" autocomplete="current-password" required></label>
+        <label>Nova senha <input name="newPassword" type="password" autocomplete="new-password" minlength="12" required></label>
+        <label>Repita a nova senha <input name="confirmation" type="password" autocomplete="new-password" minlength="12" required></label>
+        <button class="btn green">Alterar senha</button><p id="password-status" role="status"></p>
+      </form>
     </div>
   </main>
   <dialog id="editor" aria-labelledby="editor-title">
@@ -57,6 +82,6 @@
       <div class="wide editor-actions"><button class="btn danger" type="button" id="delete" hidden>Excluir produto</button><button class="btn green" type="submit">Salvar produto</button></div>
     </form>
   </dialog>
-  <script type="module" src="../assets/js/admin.js?v=apresentacao-2"></script>
+  <script type="module" src="../assets/js/admin.js?v=painel-1"></script>
 </body>
 </html>
