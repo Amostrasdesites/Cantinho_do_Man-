@@ -18,7 +18,7 @@ body {
   margin:0;
   background:var(--cream);
   color:var(--ink);
-  font:1rem/1.55 system-ui,sans-serif}
+  font:1rem/1.55 var(--store-font,system-ui),sans-serif}
 a {
   color:inherit;
   text-decoration:none}
@@ -429,3 +429,7 @@ section {
     aspect-ratio: 1;
   }
 }
+
+.analytics-choice{position:fixed;bottom:1rem;right:1rem;max-width:min(360px,calc(100vw - 2rem));padding:1rem;background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 30px #38201740;z-index:20}
+.analytics-choice p{margin:0 0 .75rem}
+.privacy-link{font:inherit;color:inherit;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
