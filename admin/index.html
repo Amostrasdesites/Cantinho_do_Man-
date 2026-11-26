@@ -18,12 +18,13 @@
   <main class="wrap admin">
     <div class="admin-heading"><div><h1>Produtos</h1><p>Gerencie o cardápio que seus clientes veem.</p></div><button type="button" class="btn" id="new" hidden>+ Novo produto</button></div>
     <p id="demo" class="notice" hidden><strong>Modo demonstração.</strong> As alterações ficam neste navegador. Use apenas dados de teste.</p>
+    <p id="configuration-needed" class="notice" hidden>O acesso da proprietária será liberado após a conexão com o banco do cardápio.</p>
     <p id="status" role="status" aria-live="polite"></p>
     <form id="login" class="panel login" hidden>
       <h2>Acesso da proprietária</h2>
-      <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+      <label>Usuário <input name="email" type="text" autocomplete="username" required></label>
       <label>Senha <input name="password" type="password" autocomplete="current-password" required></label>
-      <button class="btn green">Entrar</button>
+      <button class="btn green">Entrar</button><p id="login-demo-note" hidden>Acesso de demonstração para apresentação.</p>
     </form>
     <div id="catalog" hidden>
       <div class="summary" id="summary"></div>
@@ -50,7 +51,7 @@
       <label class="wide">Descrição <textarea name="description" rows="3" maxlength="1000"></textarea></label>
       <label>Preço de venda (R$) <input name="price" inputmode="decimal" placeholder="20,00" required></label>
       <label>Preço de custo (R$) <input name="cost" inputmode="decimal" placeholder="Opcional"></label>
-      <label class="wide">Imagem <input name="image" maxlength="500" placeholder="https://…"><span>URL HTTPS ou caminho de uma imagem do catálogo.</span></label>
+      <div class="wide photo-field"><img id="photo-preview" alt="Prévia da foto do produto" hidden><div><label>Foto do produto <input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label><p id="photo-status">Escolha uma foto JPG, PNG ou WebP de até 3 MB.</p><label id="remove-photo" hidden><input name="removePhoto" type="checkbox"> Remover foto atual</label></div></div>
       <fieldset class="wide"><legend>Etiquetas</legend><div id="labels" class="labels"></div><label>Etiquetas adicionais <input name="extra" maxlength="250" placeholder="Separe por vírgulas"></label></fieldset>
       <div class="wide labels"><label><input name="active" type="checkbox"> Mostrar na vitrine</label><label><input name="starting" type="checkbox"> Preço “a partir de”</label></div>
       <div class="wide editor-actions"><button class="btn danger" type="button" id="delete" hidden>Excluir produto</button><button class="btn green" type="submit">Salvar produto</button></div>
