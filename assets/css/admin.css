@@ -65,3 +65,9 @@ fieldset .labels { margin: 0 0 12px; }
   .stat span { font-size: .875rem; }
   .editor { grid-template-columns: 1fr; }
 }
+
+.photo-field { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+.photo-field img { width: 100px; max-width: 28%; aspect-ratio: 1; border-radius: 10px; }
+.photo-field > div { min-width: 0; flex: 1; }
+.photo-field p { color: var(--muted); font-size: .875rem; overflow-wrap: anywhere; }
+#remove-photo { display: flex; align-items: center; gap: 6px; margin-top: .4rem; }

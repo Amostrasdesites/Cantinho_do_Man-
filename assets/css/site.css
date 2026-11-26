@@ -371,3 +371,8 @@ section {
 #porcoes-list > .card {
   margin-block: 0.5rem;
 }
+
+.menu-search { padding-top: 2rem; display: grid; gap: .45rem; }
+.menu-search label { font-weight: 750; }
+.menu-search input { max-width: 38rem; width: 100%; border: 1px solid #bda994; border-radius: 12px; background: var(--paper); color: var(--ink); padding: .7rem 1rem; font: inherit; }
+.menu-search p { color: var(--muted); }
