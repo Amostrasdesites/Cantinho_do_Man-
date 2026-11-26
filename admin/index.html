@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Gerenciar cardápio · Cantinho do Maná</title>
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap head">
+      <a class="brand" href="../"><img src="../assets/img/logo.webp" alt=""><div><strong>Cantinho do Maná</strong><span>Painel do cardápio</span></div></a>
+      <div class="head-actions"><a class="btn light" href="../">Ver vitrine</a><button class="btn light" id="logout" hidden>Sair</button></div>
+    </div>
+  </header>
+  <main class="wrap admin">
+    <div class="admin-heading"><div><h1>Produtos</h1><p>Gerencie o cardápio que seus clientes veem.</p></div><button type="button" class="btn" id="new" hidden>+ Novo produto</button></div>
+    <p id="demo" class="notice" hidden><strong>Modo demonstração.</strong> As alterações ficam neste navegador. Use apenas dados de teste.</p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <form id="login" class="panel login" hidden>
+      <h2>Acesso da proprietária</h2>
+      <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+      <label>Senha <input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn green">Entrar</button>
+    </form>
+    <div id="catalog" hidden>
+      <div class="summary" id="summary"></div>
+      <div class="panel">
+        <div class="filters">
+          <label>Buscar produto <input id="search" type="search" placeholder="Nome, descrição ou etiqueta"></label>
+          <label>Etiqueta <select id="tag"><option value="">Todas</option></select></label>
+          <label>Visibilidade <select id="visibility"><option value="">Todos</option><option value="active">Na vitrine</option><option value="hidden">Ocultos</option></select></label>
+        </div>
+        <nav id="categories" class="tabs" aria-label="Filtrar por categoria"></nav>
+        <p class="result" id="result" role="status"></p>
+        <div class="table-wrap">
+          <table><thead><tr><th scope="col">Produto</th><th scope="col">Venda</th><th scope="col">Custo</th><th scope="col">Visibilidade</th><th scope="col">Ficha</th></tr></thead><tbody id="rows"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="product-form" class="editor">
+      <div class="editor-head"><h2 id="editor-title"></h2><button class="btn light" id="close" type="button" aria-label="Fechar ficha">Fechar</button></div>
+      <p id="form-error" role="alert"></p>
+      <label>Nome <input name="name" maxlength="100" required></label>
+      <label>Categoria <select name="category" required></select></label>
+      <label class="wide">Descrição <textarea name="description" rows="3" maxlength="1000"></textarea></label>
+      <label>Preço de venda (R$) <input name="price" inputmode="decimal" placeholder="20,00" required></label>
+      <label>Preço de custo (R$) <input name="cost" inputmode="decimal" placeholder="Opcional"></label>
+      <label class="wide">Imagem <input name="image" maxlength="500" placeholder="https://…"><span>URL HTTPS ou caminho de uma imagem do catálogo.</span></label>
+      <fieldset class="wide"><legend>Etiquetas</legend><div id="labels" class="labels"></div><label>Etiquetas adicionais <input name="extra" maxlength="250" placeholder="Separe por vírgulas"></label></fieldset>
+      <div class="wide labels"><label><input name="active" type="checkbox"> Mostrar na vitrine</label><label><input name="starting" type="checkbox"> Preço “a partir de”</label></div>
+      <div class="wide editor-actions"><button class="btn danger" type="button" id="delete" hidden>Excluir produto</button><button class="btn green" type="submit">Salvar produto</button></div>
+    </form>
+  </dialog>
+  <script type="module" src="../assets/js/admin.js"></script>
+</body>
+</html>
