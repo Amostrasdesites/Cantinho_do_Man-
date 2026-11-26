@@ -1,5 +1,5 @@
 import {categories, element, imageSource, money, normalize, standardTags} from './catalog.js';
-import {demo, deleteProduct, listProducts, login, logout, saveProduct} from './repository.js';
+import {configured, demo, deleteProduct, listProducts, login, logout, saveProduct, uploadPhoto} from './repository.js';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#product-form');
@@ -11,6 +11,7 @@ const siteRoot = new URL('../../', import.meta.url);
 let products = [];
 let category = '';
 let current = null;
+let previewUrl = '';
 
 function render() {
   const query = normalize($('#search').value.trim());
@@ -65,13 +66,33 @@ function openEditor(product) {
   field('description').value = product?.description ?? '';
   field('price').value = product ? (product.price_cents / 100).toFixed(2).replace('.', ',') : '';
   field('cost').value = product?.cost_cents != null ? (product.cost_cents / 100).toFixed(2).replace('.', ',') : '';
-  field('image').value = product?.image ?? '';
+  $('#remove-photo').hidden = !product?.image;
+  updatePhotoPreview();
   field('active').checked = product?.active ?? true;
   field('starting').checked = product?.starting ?? false;
   field('extra').value = (product?.tags ?? []).filter(tag => !standardTags.includes(tag)).join(', ');
   for (const checkbox of $('#labels').querySelectorAll('input')) checkbox.checked = product?.tags.includes(checkbox.value) ?? false;
   editor.showModal();
 }
+
+function updatePhotoPreview() {
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  const file = field('image').files[0];
+  previewUrl = file ? URL.createObjectURL(file) : '';
+  const existing = !field('removePhoto').checked && imageSource(current?.image ?? '', siteRoot);
+  const src = previewUrl || existing;
+  const preview = $('#photo-preview');
+  preview.hidden = !src;
+  if (src) preview.src = src;
+  else preview.removeAttribute('src');
+  $('#photo-status').textContent = file?.name || 'Escolha uma foto JPG, PNG ou WebP de até 3 MB.';
+}
+field('image').addEventListener('change', updatePhotoPreview);
+field('removePhoto').addEventListener('change', updatePhotoPreview);
+editor.addEventListener('close', () => {
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = '';
+});
 
 function parseCents(value, label) {
   const raw = value.trim();
@@ -82,9 +103,8 @@ function parseCents(value, label) {
 
 function readProduct() {
   const name = field('name').value.trim();
-  const image = field('image').value.trim();
+  const image = field('removePhoto').checked ? '' : current?.image ?? '';
   if (!name) throw new Error('Informe o nome do produto.');
-  if (image && !imageSource(image, siteRoot)) throw new Error('Informe uma URL HTTPS válida para a imagem.');
   const labels = [...$('#labels').querySelectorAll('input:checked')].map(input => input.value);
   const tags = [...new Map([...labels, ...field('extra').value.split(',').map(tag => tag.trim()).filter(Boolean)]
     .map(tag => [normalize(tag), standardTags.find(label => normalize(label) === normalize(tag)) ?? tag])).values()];
@@ -151,7 +171,12 @@ editor.addEventListener('cancel', event => {
 });
 form.addEventListener('submit', event => {
   event.preventDefault();
-  mutate(event.submitter, () => saveProduct(readProduct(), Boolean(current)), 'Produto salvo.');
+  mutate(event.submitter, async () => {
+    const product = readProduct();
+    const file = field('image').files[0];
+    if (file) product.image = await uploadPhoto(file);
+    await saveProduct(product, Boolean(current));
+  }, 'Produto salvo.');
 });
 $('#delete').addEventListener('click', event => {
   if (current && confirm('Excluir “' + current.name + '” do catálogo?')) {
@@ -164,7 +189,7 @@ async function showCatalog() {
   loginForm.hidden = true;
   $('#catalog').hidden = false;
   $('#new').hidden = false;
-  $('#logout').hidden = demo;
+  $('#logout').hidden = false;
 }
 
 loginForm.addEventListener('submit', async event => {
@@ -172,7 +197,15 @@ loginForm.addEventListener('submit', async event => {
   event.submitter.disabled = true;
   status.textContent = '';
   try {
-    await login(loginForm.elements.email.value, loginForm.elements.password.value);
+    if (demo) {
+      const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(loginForm.elements.password.value));
+      const hash = [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+      if (loginForm.elements.email.value.trim().toLowerCase() !== 'mana' || hash !== '5abf18406310f612fcc9a66677aeb5a264cd9a34df3d3498a39d052b58f7663b') {
+        throw new Error('Usuário ou senha incorretos.');
+      }
+    } else {
+      await login(loginForm.elements.email.value, loginForm.elements.password.value);
+    }
     loginForm.reset();
     await showCatalog();
   } catch (error) { status.textContent = error.message; }
@@ -188,5 +221,12 @@ $('#logout').addEventListener('click', async () => {
 });
 if (demo) {
   $('#demo').hidden = false;
-  showCatalog().catch(error => { status.textContent = error.message; });
-} else loginForm.hidden = false;
+  $('#login-demo-note').hidden = false;
+  loginForm.hidden = false;
+} else if (configured) {
+  const identity = loginForm.elements.email;
+  identity.type = 'email';
+  identity.parentElement.firstChild.textContent = 'E-mail ';
+  loginForm.hidden = false;
+}
+else $('#configuration-needed').hidden = false;

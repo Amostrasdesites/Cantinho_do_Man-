@@ -19,7 +19,13 @@ export function element(name, content, className) {
   return node;
 }
 
+export const isPreviewHost = () =>
+  ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) ||
+  (location.origin === 'https://amostrasdesites.github.io' &&
+    location.pathname.startsWith('/Cantinho_do_Man-/'));
+
 export function imageSource(value, siteRoot) {
+  if (isPreviewHost() && /^data:image\/webp;base64,[\w+/=]+$/.test(value)) return value;
   if (/^assets\/img\/[\w-]+\.webp$/.test(value)) return new URL(value, siteRoot).href;
   try {
     const url = new URL(value);

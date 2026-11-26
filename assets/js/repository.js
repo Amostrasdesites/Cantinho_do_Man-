@@ -1,8 +1,10 @@
+import {isPreviewHost} from './catalog.js';
 import {config} from './config.js';
 import {originalCatalog} from './catalog-data.js';
 
-export const demo = !config.supabaseUrl || !config.publishableKey;
-const catalogKey = 'cantinho-catalog-v1';
+export const configured = Boolean(config.supabaseUrl && config.publishableKey);
+export const demo = !configured && isPreviewHost();
+const catalogKey = 'cantinho-preview-v2';
 let session = null;
 
 function localCatalog() {
@@ -11,10 +13,11 @@ function localCatalog() {
 
 async function request(path, method = 'GET', body, token, prefer = '') {
   const headers = {apikey: config.publishableKey, 'Content-Type': 'application/json'};
+  if (body instanceof FormData) delete headers['Content-Type'];
   if (token) headers.Authorization = 'Bearer ' + token;
   if (prefer) headers.Prefer = prefer;
   const response = await fetch(config.supabaseUrl.replace(/\/$/, '') + path, {
-    method, headers, body: body === undefined ? undefined : JSON.stringify(body)
+    method, headers, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body)
   });
   if (response.status === 204) return;
   const result = await response.json().catch(() => ({}));
@@ -59,6 +62,10 @@ export async function listProducts(privateFields = false) {
     if (privateFields) return products;
     return products.filter(product => product.active).map(({cost_cents, ...product}) => product);
   }
+  if (!configured) {
+    if (privateFields) throw new Error('Acesso administrativo indisponível.');
+    return structuredClone(originalCatalog);
+  }
   const all = [];
   for (let offset = 0; ; offset += 100) {
     const page = privateFields
@@ -67,6 +74,29 @@ export async function listProducts(privateFields = false) {
     all.push(...page);
     if (page.length < 100) return all;
   }
+}
+
+export async function uploadPhoto(file) {
+  const extension = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}[file.type];
+  if (!extension || file.size < 1 || file.size > 3 * 1024 * 1024) {
+    throw new Error('Selecione uma foto JPG, PNG ou WebP de até 3 MB.');
+  }
+  if (demo) {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 640 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return canvas.toDataURL('image/webp', 0.8);
+  }
+  const key = crypto.randomUUID() + '.' + extension;
+  const payload = new FormData();
+  payload.append('cacheControl', '3600');
+  payload.append('', file);
+  await adminRequest('/storage/v1/object/catalog-photos/' + key, 'POST', payload);
+  return config.supabaseUrl.replace(/\/$/, '') + '/storage/v1/object/public/catalog-photos/' + key;
 }
 
 export async function saveProduct(product, editing) {

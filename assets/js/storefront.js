@@ -1,4 +1,4 @@
-import {categories, element, imageSource, money} from './catalog.js';
+import {categories, element, imageSource, money, normalize} from './catalog.js';
 import {demo, listProducts} from './repository.js';
 
 const grids = {
@@ -7,6 +7,27 @@ const grids = {
 };
 const siteRoot = new URL('../../', import.meta.url);
 const status = document.querySelector('#catalog-status');
+const search = document.querySelector('#menu-search');
+const results = document.querySelector('#menu-results');
+let catalog = [];
+
+function draw() {
+  const term = normalize(search.value.trim());
+  const matches = catalog.filter(product => normalize([
+    product.name, product.description, categories[product.category], ...product.tags
+  ].join(' ')).includes(term));
+  for (const [category, selector] of Object.entries(grids)) {
+    const grid = document.querySelector(selector);
+    const items = matches.filter(product => product.category === category);
+    grid.replaceChildren(...items.map(renderProduct));
+    const hide = !items.length && (Boolean(term) || category === 'lanches');
+    document.getElementById(category).hidden = hide;
+    document.querySelector('a[href="#' + category + '"]').hidden = hide;
+    if (!hide && !items.length) grid.append(element('p', 'Sem opções disponíveis no momento.'));
+  }
+  results.textContent = term ? (matches.length ? matches.length + ' produto(s) encontrado(s).' : 'Nenhum produto encontrado.') : '';
+}
+search.addEventListener('input', draw);
 
 function renderProduct(product) {
   const name = product.name;
@@ -43,16 +64,8 @@ function renderProduct(product) {
 
 async function render() {
   try {
-    const products = await listProducts();
-    for (const [category, selector] of Object.entries(grids)) {
-      const grid = document.querySelector(selector);
-      const items = products.filter(product => product.category === category);
-      grid.replaceChildren(...items.map(renderProduct));
-      if (category === 'lanches') {
-        document.querySelector('#lanches').hidden = !items.length;
-        document.querySelector('a[href="#lanches"]').hidden = !items.length;
-      } else if (!items.length) grid.append(element('p', 'Sem opções disponíveis no momento.'));
-    }
+    catalog = await listProducts();
+    draw();
     status.textContent = '';
   } catch {
     status.textContent = 'Cardápio temporariamente indisponível. Consulte as opções pelo WhatsApp.';
@@ -60,5 +73,5 @@ async function render() {
 }
 render();
 if (demo) window.addEventListener('storage', event => {
-  if (event.key === 'cantinho-catalog-v1') render();
+  if (event.key === 'cantinho-preview-v2') render();
 });
