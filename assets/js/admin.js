@@ -1,5 +1,6 @@
-import {categories, element, imageSource, money, normalize, standardTags} from './catalog.js?v=apresentacao-2';
-import {configured, demo, deleteProduct, listProducts, login, logout, saveProduct, uploadPhoto} from './repository.js?v=apresentacao-2';
+import {hideTools, showTools} from './panel-tools.js?v=painel-1';
+import {categories, element, imageSource, money, normalize, standardTags} from './catalog.js?v=painel-1';
+import {configured, deleteProduct, listProducts, login, logout, saveProduct, uploadPhoto} from './repository.js?v=painel-1';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#product-form');
@@ -190,6 +191,7 @@ async function showCatalog() {
   $('#catalog').hidden = false;
   $('#new').hidden = false;
   $('#logout').hidden = false;
+  showTools();
 }
 
 loginForm.addEventListener('submit', async event => {
@@ -197,36 +199,28 @@ loginForm.addEventListener('submit', async event => {
   event.submitter.disabled = true;
   status.textContent = '';
   try {
-    if (demo) {
-      const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(loginForm.elements.password.value));
-      const hash = [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
-      if (loginForm.elements.email.value.trim().toLowerCase() !== 'mana' || hash !== '5abf18406310f612fcc9a66677aeb5a264cd9a34df3d3498a39d052b58f7663b') {
-        throw new Error('Usuário ou senha incorretos.');
-      }
-    } else {
-      await login(loginForm.elements.email.value, loginForm.elements.password.value);
-    }
+    await login(loginForm.elements.email.value, loginForm.elements.password.value);
     loginForm.reset();
     await showCatalog();
   } catch (error) { status.textContent = error.message; }
   finally { event.submitter.disabled = false; }
 });
-$('#logout').addEventListener('click', async () => {
+function showLogin(message) {
+  if (editor.open) editor.close();
   $('#catalog').hidden = $('#new').hidden = $('#logout').hidden = true;
   products = [];
+  current = null;
   $('#rows').replaceChildren();
+  form.reset();
+  hideTools();
   loginForm.hidden = false;
-  try { await logout(); status.textContent = 'Sessão encerrada.'; }
+  status.textContent = message;
+}
+window.addEventListener('catalog-session-ended', event=>showLogin(event.detail || 'Entre novamente para continuar.'));
+$('#logout').addEventListener('click', async () => {
+  showLogin('Sessão encerrada.');
+  try { await logout(); }
   catch { status.textContent = 'Sessão encerrada neste navegador.'; }
 });
-if (demo) {
-  $('#demo').hidden = false;
-  $('#login-demo-note').hidden = false;
-  loginForm.hidden = false;
-} else if (configured) {
-  const identity = loginForm.elements.email;
-  identity.type = 'email';
-  identity.parentElement.firstChild.textContent = 'E-mail ';
-  loginForm.hidden = false;
-}
+if (configured) loginForm.hidden = false;
 else $('#configuration-needed').hidden = false;

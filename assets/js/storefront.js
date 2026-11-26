@@ -1,5 +1,5 @@
-import {categories, element, imageSource, money, normalize} from './catalog.js?v=apresentacao-2';
-import {demo, listProducts} from './repository.js?v=apresentacao-2';
+import {categories, element, imageSource, money, normalize} from './catalog.js?v=painel-1';
+import {configured, listProducts, loadTheme, recordView} from './repository.js?v=painel-1';
 
 const grids = {
   marmitas: '#marmita-grid', sexta: '#sexta-grid', porcoes: '#porcoes-list',
@@ -72,6 +72,56 @@ async function render() {
   }
 }
 render();
-if (demo) window.addEventListener('storage', event => {
-  if (event.key === 'cantinho-preview-v2') render();
-});
+
+if (configured) {
+  loadTheme().then(theme=>{
+    if (!theme) return;
+    document.documentElement.style.setProperty('--red',theme.primary_color);
+    document.documentElement.style.setProperty('--green',theme.secondary_color);
+    document.documentElement.style.setProperty('--store-font',theme.font);
+  }).catch(()=>{});
+
+  const consent = document.getElementById('analytics-choice');
+  const consentKey = 'cantinho-metrics-consent';
+  const visitorKey = 'cantinho-visitor';
+  const sections = new Set(['doces','marmitas','sexta','porcoes','sobremesas','kits','lanches','pedidos']);
+  let visitor;
+  let lastPath;
+
+  function register(path) {
+    if (!visitor || path === lastPath) return;
+    lastPath = path;
+    recordView(visitor,path).catch(()=>{ if (lastPath === path) lastPath = undefined; });
+  }
+  function enable() {
+    visitor = localStorage.getItem(visitorKey) || crypto.randomUUID();
+    localStorage.setItem(visitorKey, visitor);
+    localStorage.setItem(consentKey, 'yes');
+    consent.hidden = true;
+    register('/');
+    trackSection();
+  }
+  function trackSection() {
+    const section = location.hash.slice(1);
+    if (sections.has(section)) register('/#'+section);
+  }
+
+  try {
+    if (localStorage.getItem(consentKey) === 'yes') enable();
+    else if (localStorage.getItem(consentKey) !== 'no') consent.hidden = false;
+  } catch {}
+  consent.querySelector('[data-allow]').onclick = ()=>{ try { enable(); } catch { consent.hidden = true; } };
+  consent.querySelector('[data-decline]').onclick = ()=>{
+    try { localStorage.setItem(consentKey,'no'); } catch {}
+    consent.hidden = true;
+  };
+  document.getElementById('analytics-settings').hidden = false;
+  document.getElementById('analytics-settings').onclick = ()=>{
+    visitor = undefined;
+    lastPath = undefined;
+    try { localStorage.removeItem(visitorKey); localStorage.removeItem(consentKey); } catch {}
+    consent.hidden = false;
+    consent.querySelector('button').focus();
+  };
+  window.addEventListener('hashchange', trackSection);
+}
