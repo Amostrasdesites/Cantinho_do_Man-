@@ -376,3 +376,56 @@ section {
 .menu-search label { font-weight: 750; }
 .menu-search input { max-width: 38rem; width: 100%; border: 1px solid #bda994; border-radius: 12px; background: var(--paper); color: var(--ink); padding: .7rem 1rem; font: inherit; }
 .menu-search p { color: var(--muted); }
+
+@media (min-width: 721px) {
+  .feature img,
+  .card > img,
+  .split > img,
+  .photos img,
+  .custom > img {
+    object-fit: contain;
+    object-position: center;
+    background: var(--paper);
+  }
+
+  .feature img {
+    aspect-ratio: 16 / 9;
+  }
+
+  .card > img {
+    aspect-ratio: 4 / 3;
+  }
+
+  .friday-grid .card > img {
+    aspect-ratio: 16 / 9;
+  }
+
+  .cups .card > img {
+    aspect-ratio: 1;
+  }
+
+  #kits .card > img {
+    aspect-ratio: 6 / 5;
+  }
+
+  .split > img {
+    height: auto;
+    max-height: 440px;
+    align-self: center;
+  }
+
+  .photos {
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  .photos img {
+    height: auto;
+    aspect-ratio: 4 / 5;
+  }
+
+  .custom > img {
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
